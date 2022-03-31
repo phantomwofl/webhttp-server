@@ -58,13 +58,14 @@ public class Server {
                 }
 
                 var method = parts[0];
-                var message = parts[1];
+                var path = parts[1].split("\\?")[0];
+// path.split("?")[0]
 
-                Request request = new Request(method, message);
+                Request request = new Request(method, path);
 
 
-                if (handlers.containsKey(method) && handlers.get(method).containsKey(message)) {
-                    handlers.get(method).get(message).handle(request, out);
+                if (handlers.containsKey(method) && handlers.get(method).containsKey(path)) {
+                    handlers.get(method).get(path).handle(request, out);
                 } else {
                     out.write((
                             "HTTP/1.1 404 Not Found\r\n" +
@@ -81,10 +82,14 @@ public class Server {
         }
     }
 
-    public void addHandler(String method, String message, Handler handler) {
-        ConcurrentHashMap<String, Handler> map = new ConcurrentHashMap<>();
-        map.put(message, handler);
+    public void addHandler(String method, String endPoint, Handler handler) {
+        var methodMap = handlers.get(method);
 
-        handlers.put(method, map);
+        if (methodMap == null) {
+            methodMap = new ConcurrentHashMap<>();
+            handlers.put(method, methodMap);
+        }
+
+        methodMap.put(endPoint, handler);
     }
 }
